@@ -16,19 +16,61 @@
     <script>
       document.addEventListener("DOMContentLoaded", function () {
         document.getElementById("btn").addEventListener("click", doUpdate);
+        const dropdown = document.querySelectorAll(".dropdown-trigger");
+        M.Dropdown.init(dropdown, { constrainWidth: false });
       });
       function showAlert(message) {
         alert(message);
       }
       function doUpdate() {
-        google.script.run.withSuccessHandler(showAlert).runUpdatePermission();
+        const isChecked = document.getElementById("checkbox").checked;
+        google.script.run
+          .withSuccessHandler(showAlert)
+          .runUpdatePermission(isChecked);
+        document.getElementById("checkbox").checked = false;
       }
     </script>
   </head>
   <body>
     <div class="container">
       <div class="row">
-        <p>カレンダー権限を更新するときは、下のボタンを押してください。</p>
+        <p>
+          <i class="material-icons">check</i
+          >操作については以下のリンクを参照してください
+        </p>
+        <a class="dropdown-trigger btn" href="#" data-target="dropdown1"
+          >参照リンク</a
+        >
+        <ul id="dropdown1" class="dropdown-content">
+          <li>
+            <a href="#!"
+              ><i class="material-icons">insert_drive_file</i>操作マニュアル</a
+            >
+          </li>
+          <li>
+            <a href="#!"><i class="material-icons">web</i>Webサイト</a>
+          </li>
+        </ul>
+        <br />
+        <br />
+      </div>
+      <div class="row">
+        <p>
+          <i class="material-icons">check</i
+          >カレンダー権限の更新をを行う場合は下記のチェックボックスに忘れずにチェックをを入れてください
+        </p>
+        <p>
+          <label>
+            <input type="checkbox" class="filled-in" id="checkbox" />
+            <span>更新します</span>
+          </label>
+        </p>
+      </div>
+      <div class="row">
+        <p>
+          <i class="material-icons">check</i
+          >ボタンをを押してカレンダー権限を更新する
+        </p>
         <button
           id="btn"
           class="btn waves-effect waves-light"
@@ -38,9 +80,7 @@
           権限更新実行!!
           <i class="material-icons right">send</i>
         </button>
-        <p>プログラム実行が終わったら画面上部に通知が出ます。</p>
       </div>
-      <div class="row">
     </div>
   </body>
 </html>

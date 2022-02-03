@@ -55,7 +55,6 @@ function getInfo(calendar) {
       role: row[calendarIndex],
     };
   });
-
   return {
     calendarInfo: calendarInfo,
     sheetInfo: sheetInfo,
@@ -74,7 +73,7 @@ function removeOldCalendarPermission(info) {
   calendarInfo.forEach(function (calendar) {
     const isCalendarEmailInSheet = sheetInfo
       .map(function (sheet) {
-        return calendar.title === sheet.title;
+        return calendar.email === sheet.email;
       })
       .reduce(reduceSum);
     if (
@@ -82,17 +81,17 @@ function removeOldCalendarPermission(info) {
       calendar.email !== "default" &&
       isCalendarEmailInSheet === 0
     ) {
-      // Calendar.Acl.insert(
-      //   {
-      //     role: "none",
-      //     scope: {
-      //       type: "user",
-      //       value: calendar.email,
-      //     },
-      //   },
-      //   calendar.id
-      // );
-      Logger.log(calendar.title + "で" + calendar.email + "の許可を消す");
+      Calendar.Acl.insert(
+        {
+          role: "none",
+          scope: {
+            type: "user",
+            value: calendar.email,
+          },
+        },
+        calendar.id
+      );
+      Logger.log(calendar.title + "で" + calendar.email + "の許可を消しました");
     }
   });
 }
@@ -112,45 +111,46 @@ function updatePermissionBySheetInfo(info) {
       isSheetEmailInCalendar == 0 || // 新規許可
       calendarInfo[sheetEmailBools.indexOf(true)].role !== sheet.role // 役割変更
     ) {
-      // Calendar.Acl.insert(
-      //   {
-      //     role: sheet.role,
-      //     scope: {
-      //       type: "user",
-      //       value: sheet.email,
-      //     },
-      //   },
-      //   calendar.id
-      // );
+      Calendar.Acl.insert(
+        {
+          role: sheet.role,
+          scope: {
+            type: "user",
+            value: sheet.email,
+          },
+        },
+        sheet.id
+      );
       Logger.log(
-        sheet.title + "で" + sheet.email + "を" + sheet.role + "として登録"
+        sheet.title +
+          "で" +
+          sheet.email +
+          "を" +
+          sheet.role +
+          "として登録しました"
       );
     }
   });
 }
 
-function runUpdatePermission() {
-  try {
-    const calendarList = getCalendarList();
-    calendarList.forEach(function (calendar) {
-      removeOldCalendarPermission(getInfo(calendar));
-      updatePermissionBySheetInfo(getInfo(calendar));
-    });
+function runUpdatePermission(isChecked) {
+  if (!isChecked) {
+    return "チェックボックスにチェックを入れてください";
+  } else {
+    try {
+      const calendarList = getCalendarList();
+      calendarList.forEach(function (calendar) {
+        removeOldCalendarPermission(getInfo(calendar));
+        updatePermissionBySheetInfo(getInfo(calendar));
+      });
 
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = now.getMonth() + 1;
-    const date = now.getDate();
-    const hours = now.getHours();
-    const minutes = now.getMinutes();
+      const now = new Date();
+      const ws = ss.getSheetByName("input");
+      ws.setName(now.toLocaleDateString() + " " + now.toLocaleTimeString());
 
-    const sheet = ss.getSheetByName("input");
-    const sheetNameNew =
-      year + "-" + month + "-" + date + "-" + hours + "-" + minutes;
-    sheet.setName(sheetNameNew);
-
-    return "SUCCESS: カレンダー権限の更新が終わりました。";
-  } catch {
-    return "ERROR!!: スクリプトは正しく動作しませんでした。";
+      return "SUCCESS: カレンダー権限の更新が終わりました。";
+    } catch {
+      return "ERROR!!: スクリプトは正しく動作しませんでした。";
+    }
   }
 }
