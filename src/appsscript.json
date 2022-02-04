@@ -4,10 +4,14 @@
     "enabledAdvancedServices": [
       {
         "userSymbol": "Calendar",
-        "version": "v3",
-        "serviceId": "calendar"
+        "serviceId": "calendar",
+        "version": "v3"
       }
     ]
+  },
+  "webapp": {
+    "executeAs": "USER_DEPLOYING",
+    "access": "ANYONE_ANONYMOUS"
   },
   "exceptionLogging": "STACKDRIVER",
   "runtimeVersion": "V8"

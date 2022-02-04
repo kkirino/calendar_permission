@@ -1,3 +1,13 @@
+function getWebAppUrl() {
+  let url = ScriptApp.getService().getUrl().toString();
+  Logger.log(url.replace("dev", "exec"));
+  return url.replace("dev", "exec");
+}
+
+function doGet() {
+  return HtmlService.createTemplateFromFile("manual").evaluate();
+}
+
 function onOpen() {
   SpreadsheetApp.getUi()
     .createMenu("サイドバーを開く")
@@ -6,19 +16,16 @@ function onOpen() {
 }
 
 function openSidebar() {
-  const htmlOutput =
-    HtmlService.createHtmlOutputFromFile("sidebar").setTitle(
-      "実行用コンソール"
-    );
+  const htmlOutput = HtmlService.createTemplateFromFile("sidebar").evaluate();
   SpreadsheetApp.getUi().showSidebar(htmlOutput);
 }
 
 const ss = SpreadsheetApp.getActiveSpreadsheet();
 
 function getCalendarList() {
-  const sheet = ss.getSheetByName("calendar_list");
-  const calendarList = sheet
-    .getRange(2, 1, sheet.getLastRow() - 1, sheet.getLastColumn())
+  const ws = ss.getSheetByName("calendar_list");
+  const calendarList = ws
+    .getRange(2, 1, ws.getLastRow() - 1, ws.getLastColumn())
     .getValues()
     .map(function (row) {
       return {
@@ -38,13 +45,12 @@ function getInfo(calendar) {
       role: e.role,
     };
   });
-
-  const sheet = ss.getSheetByName("input");
-  const sheetValues = sheet
-    .getRange(2, 1, sheet.getLastRow() - 1, sheet.getLastColumn())
+  const ws = ss.getSheetByName("input");
+  const sheetValues = ws
+    .getRange(2, 1, ws.getLastRow() - 1, ws.getLastColumn())
     .getValues();
-  const calendarTitles = sheet
-    .getRange(1, 1, 1, sheet.getLastColumn())
+  const calendarTitles = ws
+    .getRange(1, 1, 1, ws.getLastColumn())
     .getValues()[0];
   const calendarIndex = calendarTitles.indexOf(calendar.title);
   const sheetInfo = sheetValues.map(function (row) {
@@ -69,6 +75,7 @@ function removeOldCalendarPermission(info) {
   const calendarInfo = info.calendarInfo;
   const sheetInfo = info.sheetInfo;
   const str = "@group.calendar.google.com";
+  const ws = ss.getSheetByName("log");
 
   calendarInfo.forEach(function (calendar) {
     const isCalendarEmailInSheet = sheetInfo
@@ -91,7 +98,10 @@ function removeOldCalendarPermission(info) {
         },
         calendar.id
       );
-      Logger.log(calendar.title + "で" + calendar.email + "の許可を消しました");
+      ws.appendRow([
+        new Date(),
+        calendar.title + "で" + calendar.email + "の許可を削除",
+      ]);
     }
   });
 }
@@ -99,6 +109,7 @@ function removeOldCalendarPermission(info) {
 function updatePermissionBySheetInfo(info) {
   const calendarInfo = info.calendarInfo;
   const sheetInfo = info.sheetInfo;
+  const ws = ss.getSheetByName("log");
 
   sheetInfo.forEach(function (sheet) {
     const sheetEmailBools = calendarInfo.map(function (calendar) {
@@ -108,8 +119,8 @@ function updatePermissionBySheetInfo(info) {
     const isSheetEmailInCalendar = sheetEmailBools.reduce(reduceSum);
 
     if (
-      isSheetEmailInCalendar == 0 || // 新規許可
-      calendarInfo[sheetEmailBools.indexOf(true)].role !== sheet.role // 役割変更
+      isSheetEmailInCalendar == 0 ||
+      calendarInfo[sheetEmailBools.indexOf(true)].role !== sheet.role
     ) {
       Calendar.Acl.insert(
         {
@@ -121,14 +132,10 @@ function updatePermissionBySheetInfo(info) {
         },
         sheet.id
       );
-      Logger.log(
-        sheet.title +
-          "で" +
-          sheet.email +
-          "を" +
-          sheet.role +
-          "として登録しました"
-      );
+      ws.appendRow([
+        new Date(),
+        sheet.title + "で" + sheet.email + "を" + sheet.role + "として登録",
+      ]);
     }
   });
 }
