@@ -1,13 +1,3 @@
-function getWebAppUrl() {
-  let url = ScriptApp.getService().getUrl().toString();
-  Logger.log(url.replace("dev", "exec"));
-  return url.replace("dev", "exec");
-}
-
-function doGet() {
-  return HtmlService.createTemplateFromFile("manual").evaluate();
-}
-
 function onOpen() {
   SpreadsheetApp.getUi()
     .createMenu("サイドバーを開く")
@@ -21,6 +11,25 @@ function openSidebar() {
 }
 
 const ss = SpreadsheetApp.getActiveSpreadsheet();
+
+function getSettings() {
+  const ws = ss.getSheetByName("settings");
+  const titles = ws
+    .getRange(2, 1, ws.getLastRow() - 1, 1)
+    .getValues()
+    .map(function (row) {
+      return row[0];
+    });
+  const values = ws
+    .getRange(2, 2, ws.getLastRow() - 1, 1)
+    .getValues()
+    .map(function (row) {
+      return row[0];
+    });
+  const settings = {};
+  settings.manualPageUrl = values[titles.indexOf("マニュアルページのURL")];
+  return settings;
+}
 
 function getCalendarList() {
   const ws = ss.getSheetByName("calendar_list");
@@ -76,7 +85,6 @@ function removeOldCalendarPermission(info) {
   const sheetInfo = info.sheetInfo;
   const str = "@group.calendar.google.com";
   const ws = ss.getSheetByName("log");
-
   calendarInfo.forEach(function (calendar) {
     const isCalendarEmailInSheet = sheetInfo
       .map(function (sheet) {
@@ -110,7 +118,6 @@ function updatePermissionBySheetInfo(info) {
   const calendarInfo = info.calendarInfo;
   const sheetInfo = info.sheetInfo;
   const ws = ss.getSheetByName("log");
-
   sheetInfo.forEach(function (sheet) {
     const sheetEmailBools = calendarInfo.map(function (calendar) {
       return calendar.email === sheet.email;
@@ -150,11 +157,9 @@ function runUpdatePermission(isChecked) {
         removeOldCalendarPermission(getInfo(calendar));
         updatePermissionBySheetInfo(getInfo(calendar));
       });
-
       const now = new Date();
       const ws = ss.getSheetByName("input");
       ws.setName(now.toLocaleDateString() + " " + now.toLocaleTimeString());
-
       return "SUCCESS: カレンダー権限の更新が終わりました。";
     } catch {
       return "ERROR!!: スクリプトは正しく動作しませんでした。";
