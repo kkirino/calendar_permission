@@ -1,1 +1,3 @@
-Management System for account permission of Google calendar share 
+Management System for Google calendar share permission usint Google Apps Script
+
+

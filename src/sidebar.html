@@ -15,12 +15,20 @@
     />
     <script>
       document.addEventListener("DOMContentLoaded", function () {
-        document.getElementById("btn").addEventListener("click", doUpdate);
+        document
+          .getElementById("btn-create")
+          .addEventListener("click", doCreateSheet);
+        document
+          .getElementById("btn-submit")
+          .addEventListener("click", doUpdate);
         const dropdown = document.querySelectorAll(".dropdown-trigger");
         M.Dropdown.init(dropdown, { constrainWidth: false });
       });
       function showAlert(message) {
         alert(message);
+      }
+      function doCreateSheet() {
+        google.script.run.withSuccessHandler(showAlert).createWorkingSheet();
       }
       function doUpdate() {
         const isChecked = document.getElementById("checkbox").checked;
@@ -35,22 +43,23 @@
     <div class="container">
       <div class="row">
         <p>
-          <i class="material-icons">check</i>
-          操作については以下のリンクを参照してください
+          <i class="material-icons">check</i
+          >操作については以下のリンクを参照してください
         </p>
-        <a class="dropdown-trigger btn" href="#" data-target="dropdown1">
-          参照リンク
+        <a class="dropdown-trigger btn" href="#" data-target="dropdown1"
+          >参照リンク
+          <i class="material-icons right">link</i>
         </a>
         <ul id="dropdown1" class="dropdown-content">
           <li>
-            <a href="<?!= getSettings().manualPageUrl; ?>" target="_blank">
-              <i class="material-icons">insert_drive_file</i>操作マニュアル
-            </a>
+            <a href="<?!= getSettings().manualPageUrl; ?>" target="_blank"
+              ><i class="material-icons">insert_drive_file</i>操作マニュアル</a
+            >
           </li>
           <li>
-            <a href="https://calendar.google.com/" target="_blank">
-              <i class="material-icons">web</i>Googleカレンダー
-            </a>
+            <a href="https://calendar.google.com/" target="_blank"
+              ><i class="material-icons">web</i>Googleカレンダー</a
+            >
           </li>
         </ul>
         <br />
@@ -58,29 +67,45 @@
       </div>
       <div class="row">
         <p>
-          <i class="material-icons">check</i>
-          カレンダー権限の更新をを行う場合は下記のチェックボックスに忘れずにチェックをを入れてください
-        </p>
-        <p>
-          <label>
-            <input type="checkbox" class="filled-in" id="checkbox" />
-            <span>更新します</span>
-          </label>
-        </p>
-      </div>
-      <div class="row">
-        <p>
-          <i class="material-icons">check</i>
-          ボタンをを押してカレンダー権限を更新する
+          <i class="material-icons">check</i
+          >カレンダー共有定義を更新するための作業用シートを作成するときは、シート作成ボタンを押してください
         </p>
         <button
-          id="btn"
+          id="btn-create"
           class="btn waves-effect waves-light"
           type="submit"
           name="action"
         >
-          権限更新実行!!
-          <i class="material-icons right">send</i>
+          シート作成!!<i class="material-icons right">content_copy</i>
+        </button>
+        <br />
+        <br />
+      </div>
+      <div class="row">
+        <p>
+          <i class="material-icons">check</i
+          >カレンダー権限の更新を行うためには、下記のチェックボックスに忘れずにチェックを入れてください
+        </p>
+        <p>
+          <label
+            ><input type="checkbox" class="filled-in" id="checkbox" /><span
+              >更新します</span
+            ></label
+          >
+        </p>
+      </div>
+      <div class="row">
+        <p>
+          <i class="material-icons">check</i
+          >ボタンを押してカレンダー権限を更新する
+        </p>
+        <button
+          id="btn-submit"
+          class="btn waves-effect waves-light"
+          type="submit"
+          name="action"
+        >
+          権限更新実行!!<i class="material-icons right">send</i>
         </button>
       </div>
     </div>

@@ -11,6 +11,7 @@ function openSidebar() {
 }
 
 const ss = SpreadsheetApp.getActiveSpreadsheet();
+const workingSheetName = "【作業中】新しい共有定義";
 
 function getSettings() {
   const ws = ss.getSheetByName("settings");
@@ -29,6 +30,39 @@ function getSettings() {
   const settings = {};
   settings.manualPageUrl = values[titles.indexOf("マニュアルページのURL")];
   return settings;
+}
+
+function createWorkingSheet() {
+  const sheetNames = ss.getSheets().map(function (sheet) {
+    return sheet.getName();
+  });
+  const sheetNamesWithDate = sheetNames.filter(function (string) {
+    const regex = new RegExp(
+      "^20[0-9]{2}/[0-9]{1,}/[0-9]{1,} [0-9]{1,}:[0-9]{1,}:[0-9]{1,}$"
+    );
+    return string.search(regex) > -1;
+  });
+  function compareDate(dateFirst, dateSecond) {
+    return new Date(dateFirst).valueOf() - new Date(dateSecond).valueOf();
+  }
+  sheetNamesWithDate.sort(compareDate);
+  const numSheet = sheetNamesWithDate.length;
+  for (let i = 0; i < numSheet - 3; i++) {
+    let sheetForDelete = ss.getSheetByName(sheetNamesWithDate[i]);
+    ss.deleteSheet(sheetForDelete);
+  }
+  if (sheetNames.indexOf(workingSheetName) > -1) {
+    return (
+      "すでに「" +
+      workingSheetName +
+      "」シートが存在するため、新たなシートは作成しませんでした"
+    );
+  } else {
+    const sheetForCopy = ss.getSheetByName(sheetNamesWithDate[numSheet - 1]);
+    const copiedSheet = sheetForCopy.copyTo(ss);
+    copiedSheet.setName(workingSheetName);
+    return "「" + workingSheetName + "」シートを作成しました";
+  }
 }
 
 function getCalendarList() {
@@ -54,7 +88,7 @@ function getInfo(calendar) {
       role: e.role,
     };
   });
-  const ws = ss.getSheetByName("input");
+  const ws = ss.getSheetByName(workingSheetName);
   const sheetValues = ws
     .getRange(2, 1, ws.getLastRow() - 1, ws.getLastColumn())
     .getValues();
@@ -122,9 +156,7 @@ function updatePermissionBySheetInfo(info) {
     const sheetEmailBools = calendarInfo.map(function (calendar) {
       return calendar.email === sheet.email;
     });
-
     const isSheetEmailInCalendar = sheetEmailBools.reduce(reduceSum);
-
     if (
       isSheetEmailInCalendar == 0 ||
       calendarInfo[sheetEmailBools.indexOf(true)].role !== sheet.role
@@ -158,11 +190,14 @@ function runUpdatePermission(isChecked) {
         updatePermissionBySheetInfo(getInfo(calendar));
       });
       const now = new Date();
-      const ws = ss.getSheetByName("input");
+      const ws = ss.getSheetByName(workingSheetName);
       ws.setName(now.toLocaleDateString() + " " + now.toLocaleTimeString());
-      return "SUCCESS: カレンダー権限の更新が終わりました。";
-    } catch {
-      return "ERROR!!: スクリプトは正しく動作しませんでした。";
+      const protection = ws.protect();
+      protection.setWarningOnly(true);
+      return "カレンダー権限の更新が終わりました。";
+    } catch (e) {
+      Logger.log(e);
+      return "スクリプトは正しく動作しませんでした。";
     }
   }
 }
